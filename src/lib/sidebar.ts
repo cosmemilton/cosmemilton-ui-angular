@@ -1,4 +1,4 @@
-import { booleanAttribute, ChangeDetectionStrategy, Component, computed, effect, input, output, signal } from '@angular/core'
+import { afterRenderEffect, booleanAttribute, ChangeDetectionStrategy, Component, computed, ElementRef, input, linkedSignal, output, signal, viewChild } from '@angular/core'
 import { RouterLink } from '@angular/router'
 import { CmIcon } from './icon'
 
@@ -55,7 +55,7 @@ export type CmNavGroup = { id: string; label: string; icon?: string; items: read
                     @if (!railOnly()) { <cm-icon class="cm-sidebar__chevron" name="chevron-right" [size]="16" /> }
                   </button>
                   @if (open() === group.id) {
-                    <div class="cm-sidebar__group-items">
+                    <div #groupItems class="cm-sidebar__group-items">
                       @for (item of group.items; track item.path) {
                         <a class="cm-sidebar__item" [class.cm-sidebar__item--active]="isActive(item.path)"
                           [routerLink]="item.path" [attr.aria-current]="isActive(item.path) ? 'page' : null" (click)="selected.emit()">
@@ -86,16 +86,38 @@ export class CmSidebar {
   readonly selected = output<void>()
   readonly collapsed = signal(false)
   protected readonly railOnly = computed(() => this.collapsed() && !this.mobile())
-  protected readonly open = signal<string | null>(null)
-  protected readonly activeGroup = computed(() =>
-    this.groups().find(group => group.items.some(item => this.isActive(item.path)))?.id ?? null,
-  )
+  protected readonly open = linkedSignal({
+    source: this.path,
+    computation: path => this.groupForPath(path)?.id ?? this.groups().find(group => !group.direct)?.id ?? null,
+  })
+  protected readonly activeGroup = computed(() => this.groupForPath(this.path())?.id ?? null)
+  private readonly groupItems = viewChild<ElementRef<HTMLElement>>('groupItems')
 
   constructor() {
-    effect(() => this.open.set(this.activeGroup() ?? this.groups().find(group => !group.direct)?.id ?? null))
+    afterRenderEffect(onCleanup => {
+      this.path() // Seleção também pode mudar mantendo o mesmo grupo aberto.
+      const list = this.groupItems()?.nativeElement
+      if (!list || this.railOnly()) return
+      const active = list.querySelector<HTMLElement>('[aria-current="page"]')
+      if (!active) return
+
+      const observer = new ResizeObserver(() => {
+        if (!list.clientHeight || list.scrollHeight <= list.clientHeight) return
+        const item = active.getBoundingClientRect()
+        const bounds = list.getBoundingClientRect()
+        if (item.top < bounds.top) list.scrollTop += item.top - bounds.top
+        else if (item.bottom > bounds.bottom) list.scrollTop += item.bottom - bounds.bottom
+      })
+      observer.observe(list)
+      onCleanup(() => observer.disconnect())
+    })
   }
 
   protected isActive(path: string) { return this.path() === path }
+
+  private groupForPath(path: string) {
+    return this.groups().find(group => !group.direct && group.items.some(item => item.path === path))
+  }
 
   protected openGroup(id: string) {
     if (this.collapsed()) {

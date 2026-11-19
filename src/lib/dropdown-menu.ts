@@ -69,9 +69,15 @@ export class CmDropdownMenu {
     const target = this.anchor.getBoundingClientRect()
     const menu = this.panel.getBoundingClientRect()
     const offset = 8
-    const left = this.align() === 'end' ? target.right - menu.width : target.left
+    const maximumLeft = viewport.innerWidth - menu.width - offset
+    const start = target.left
+    const end = target.right - menu.width
+    const preferred = this.align() === 'end' ? end : start
+    const alternate = this.align() === 'end' ? start : end
+    const overflow = (left: number) => Math.max(0, offset - left) + Math.max(0, left - maximumLeft)
+    const left = overflow(alternate) < overflow(preferred) ? alternate : preferred
     const top = target.bottom + offset + menu.height <= viewport.innerHeight ? target.bottom + offset : target.top - menu.height - offset
-    this.panel.style.left = Math.max(offset, Math.min(left, viewport.innerWidth - menu.width - offset)) + 'px'
+    this.panel.style.left = Math.max(offset, Math.min(left, maximumLeft)) + 'px'
     this.panel.style.top = Math.max(offset, top) + 'px'
   }
 
