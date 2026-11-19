@@ -79,7 +79,8 @@ const compare = new Intl.Collator('pt-BR', { numeric: true })
                           [attr.aria-label]="cell.actionLabel ?? cell.label" (click)="rowAction.emit({action:cell.action,row})">{{ cell.label }}</button>
                       } @else if (cell.href) {
                         @if (router; as linkRouter) {
-                          <a cmLink tone="primary" [routerLink]="linkRouter.parseUrl(cell.href)" [attr.aria-label]="cell.actionLabel">{{ cell.label }}</a>
+                          <a cmLink tone="primary" [routerLink]="cell.href.startsWith('/') ? linkRouter.parseUrl(cell.href) : cell.href"
+                            [attr.aria-label]="cell.actionLabel">{{ cell.label }}</a>
                         } @else {
                           <a cmLink tone="primary" [href]="cell.href" [attr.aria-label]="cell.actionLabel">{{ cell.label }}</a>
                         }
