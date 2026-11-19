@@ -2,6 +2,10 @@
 
 .cm-icon-badge > cm-icon { width: 60%; height: 60%; }
 .cm-icon-badge > cm-icon > svg { width: 100%; height: 100%; }
+.cm-data-table__column-button > cm-icon, .cm-data-table__header-content > cm-icon { display: contents; }
+.cm-data-table__column-button > cm-icon > svg { width: .875rem; height: .875rem; }
+.cm-data-table__header-content > cm-icon > svg { width: .75rem; height: .75rem; }
+.cm-data-table__header-content > .cm-data-table__sort-icon--inactive > svg { opacity: .4; }
 
 .cm-angular-tabs-vertical.cm-tabs-list { flex-direction: column; align-items: stretch; }
 .cm-tabs-content[hidden] { display:none; }

@@ -1,6 +1,6 @@
 {
   "name": "@cosmemilton/ui-angular",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Componentes e temas CosmeMilton UI para Angular",
   "license": "ISC",
   "repository": {"type":"git","url":"git+https://github.com/cosmemilton/cosmemilton-ui-angular.git"},

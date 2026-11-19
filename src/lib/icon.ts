@@ -4,7 +4,8 @@ import { iconNodes } from './icon-nodes'
 @Component({
   selector: 'cm-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { 'aria-hidden': 'true', style: 'display:inline-flex;align-items:center;flex:none' },
+  host: { 'aria-hidden': 'true' },
+  styles: [':host { display: inline-flex; align-items: center; flex: none; }'],
   template: `
     <svg [attr.width]="size()" [attr.height]="size()" viewBox="0 0 24 24" fill="none" stroke="currentColor"
       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
