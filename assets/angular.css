@@ -1,5 +1,8 @@
 /* Shared Aurora workspace bindings for Angular. Uses the CosmeMilton theme tokens. */
 
+.cm-icon-badge > cm-icon { width: 60%; height: 60%; }
+.cm-icon-badge > cm-icon > svg { width: 100%; height: 100%; }
+
 .cm-angular-tabs-vertical.cm-tabs-list { flex-direction: column; align-items: stretch; }
 .cm-tabs-content[hidden] { display:none; }
 .cm-angular-dialog {
