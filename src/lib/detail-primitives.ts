@@ -1,6 +1,7 @@
 import { Component, Directive, computed, input, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { CmIcon } from './icon';
+import { CmText } from './layout-primitives';
 
 export interface CmSummaryItem {
   id?: string | number;
@@ -53,7 +54,7 @@ export interface CmTimelineItem {
 
 @Component({
   selector: 'cm-timeline',
-  imports: [CmIcon],
+  imports: [CmIcon, CmText],
   standalone: true,
   host: { style: 'display: contents' },
   template: `
@@ -62,7 +63,7 @@ export interface CmTimelineItem {
         <li class="cm-timeline__item">
           @if (hasLabels()) {
             <div class="cm-timeline__label">
-              @if (item.dateTime) { <time class="cm-text cm-text--xs" [attr.datetime]="item.dateTime">{{ item.label }}</time> }
+              @if (item.dateTime) { <time cmText size="xs" [attr.datetime]="item.dateTime">{{ item.label }}</time> }
               @else { {{ item.label }} }
             </div>
           }
@@ -112,7 +113,7 @@ export class CmTimeline {
     @if (src() && failedSource() !== src()) {
       <img class="cm-avatar__image" [src]="src()" [alt]="alt()" loading="lazy" decoding="async" (error)="failedSource.set(src())" />
     } @else {
-      <span class="cm-avatar__fallback">{{ fallback() || alt().charAt(0) || '?' }}</span>
+      {{ fallback() || alt().charAt(0) || '?' }}
     }
   `,
 })
