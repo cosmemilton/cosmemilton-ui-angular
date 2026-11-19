@@ -1,7 +1,7 @@
 import { Component, Directive, computed, input, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { CmIcon } from './icon';
-import { CmText } from './layout-primitives';
+import { CmGridContainer, CmText } from './layout-primitives';
 
 export interface CmSummaryItem {
   id?: string | number;
@@ -213,6 +213,7 @@ export class CmButtonGroup {
 @Component({
   selector: 'cm-list-panel',
   standalone: true,
+  imports: [CmGridContainer],
   host: { style: 'display: contents' },
   template: `
     <div class="cm-card cm-card--surface cm-card--tone-default cm-card--flat">
@@ -220,7 +221,7 @@ export class CmButtonGroup {
         <div class="cm-section-header">
           <div class="cm-section-header__content">
             <h2 class="cm-section-header__title">{{ title() }}</h2>
-            @if (description()) { <p class="cm-section-header__description">{{ description() }}</p> }
+            @if (description()) { <p class="cm-section-header__description" [attr.aria-live]="descriptionLive()">{{ description() }}</p> }
           </div>
           @if (showActions()) {
             <div class="cm-section-header__actions"><ng-content select="[cmListActions]" /></div>
@@ -230,7 +231,7 @@ export class CmButtonGroup {
       <div class="cm-card__body cm-card--padding-md">
         <div class="cm-stack" style="--cm-layout-gap:var(--space-md)">
           @if (showFilters()) {
-            <div class="cm-grid-container cm-grid-container--preset-filters" role="group" [attr.aria-label]="filterLabel() || title()">
+            <div cmGridContainer preset="filters" role="group" [attr.aria-label]="filterLabel() || title()">
               <ng-content select="[cmListFilters]" />
             </div>
           }
@@ -243,6 +244,7 @@ export class CmButtonGroup {
 export class CmListPanel {
   readonly title = input.required<string>();
   readonly description = input('');
+  readonly descriptionLive = input<'polite' | 'assertive'>();
   readonly filterLabel = input('');
   readonly showActions = input(false);
   readonly showFilters = input(false);
