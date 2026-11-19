@@ -165,7 +165,10 @@ export class CmBadge {
   readonly tone = input('default');
   readonly size = input('md');
   readonly variant = input('soft');
-  protected readonly rootClass = computed(() => `cm-badge cm-badge--${this.variant()} cm-badge--tone-${this.tone()} cm-badge--${this.size()}`);
+  protected readonly rootClass = computed(() => {
+    const tone = this.tone();
+    return `cm-badge cm-badge--${this.variant()} cm-badge--${tone} cm-badge--tone-${tone} cm-badge--${this.size()}`;
+  });
 }
 
 @Directive({
