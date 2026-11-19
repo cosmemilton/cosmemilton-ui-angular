@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Componentes e temas CosmeMilton UI para Angular",
   "license": "ISC",
+  "repository": {"type":"git","url":"git+https://github.com/cosmemilton/cosmemilton-ui-angular.git"},
   "type": "module",
   "scripts": { "build": "ng-packagr -p ng-package.json -c tsconfig.lib.json" },
   "peerDependencies": { "@angular/core": "^22.0.0", "@angular/common": "^22.0.0", "@angular/router": "^22.0.0", "@angular/forms": "^22.0.0" },
