@@ -86,7 +86,7 @@ aurora-root { display: contents; }
 .aurora-card-body { padding: 1rem 1.125rem; min-inline-size: 0; }
 .aurora-filter-row { justify-content: start; align-items: end; padding: .4rem 1.125rem 1rem; }
 .aurora-native-field { display: grid; align-content: start; gap: .25rem; font-size: .8125rem; font-weight: 650; color: var(--color-foreground); min-inline-size: min(100%, 9rem); }
-.aurora-native-field > :is(input, select, textarea), .cm-data-table select {
+.aurora-native-field > :is(input, select, textarea) {
   font-family: inherit;
   font-size: .875rem;
   color: var(--color-foreground);
