@@ -3,6 +3,7 @@ import {
   input, ModelSignal, model, signal,
 } from '@angular/core'
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms'
+import { CmField } from './page-primitives'
 
 let sequence = 0
 
@@ -98,12 +99,13 @@ export type CmNativeOption = { value: string; label: string; disabled?: boolean 
 
 @Component({
   selector: 'cm-native-select',
+  imports: [CmField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CmNativeSelect), multi: true }],
   host: { style: 'display:block;min-inline-size:0' },
   template: `
-    <label class="cm-angular-field" [attr.for]="controlId()">
-      {{ label() }}
+    <div cmField control="native" [label]="label()" [htmlFor]="controlId()" [required]="required()"
+      [description]="hint()" [descriptionId]="describedBy() ?? undefined">
       <select #control [id]="controlId()" [name]="name()" [value]="current()" [required]="required()" [disabled]="disabledState()"
         [attr.aria-invalid]="invalid() || null" [attr.aria-describedby]="describedBy()"
         (change)="publish(control.value)" (blur)="touched()">
@@ -112,8 +114,7 @@ export type CmNativeOption = { value: string; label: string; disabled?: boolean 
           <option [value]="option.value" [disabled]="option.disabled ?? false" [selected]="current() === option.value">{{ option.label }}</option>
         }
       </select>
-      @if (hint()) { <small class="cm-text cm-text--xs cm-text--muted" [attr.id]="describedBy()">{{ hint() }}</small> }
-    </label>
+    </div>
   `,
 })
 export class CmNativeSelect extends StringField {

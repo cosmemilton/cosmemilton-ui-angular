@@ -11,7 +11,7 @@ export type CmNavGroup = { id: string; label: string; icon?: string; items: read
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display:contents' },
   styles: [`
-    .cm-sidebar-shell--collapsed .cm-sidebar__groups { display: contents; }
+    .cm-sidebar__groups { display: contents; }
     .cm-sidebar-shell--collapsed cm-icon.cm-sidebar__brand-icon { justify-content: center; }
   `],
   template: `
