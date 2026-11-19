@@ -164,6 +164,78 @@ function plotPath(points: readonly Coordinate[], smooth: boolean) {
 
 function valid(value: number | null): value is number { return value !== null && Number.isFinite(value) }
 
+export interface CmLinePoint { label: string; value: number }
+
+@Component({
+  selector: 'cm-line-chart', imports: [CmChartFrame], host: { style: 'display:block;min-width:0' },
+  template: `
+    <cm-chart-frame [title]="title()" [description]="description()" [empty]="!series().length" [table]="table()"
+      [showAccessibleTable]="showAccessibleTable()" [style.--cm-chart-frame-height]="height()+'px'" data-cm-chart-frame-height>
+      <div class="cm-line-chart"><svg class="cm-line-chart__svg" [attr.viewBox]="'0 0 400 '+height()" [style.height.px]="height()">
+        @if (showGrid()) {
+          @for (line of grid(); track $index) {
+            <svg:line [attr.x1]="left()" x2="390" [attr.y1]="line.y" [attr.y2]="line.y" stroke="currentColor" stroke-width="0.5" class="cm-line-chart__grid-line" />
+            @if (showLabels()) { <svg:text [attr.x]="left()-6" [attr.y]="line.y+4" font-size="10" text-anchor="end" fill="currentColor" class="cm-line-chart__label">{{ valueFormat()(line.value) }}</svg:text> }
+          }
+        }
+        @if (area()) { <svg:path [attr.d]="area()" [attr.fill]="ink()" opacity="0.1" /> }
+        <svg:path [attr.d]="path()" fill="none" [attr.stroke]="ink()" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        @for (point of points(); track $index) {
+          <svg:circle [attr.cx]="point.x" [attr.cy]="point.y" r="4" [attr.fill]="ink()">
+            @if (tooltipFormat(); as format) { <svg:title>{{ format(point) }}</svg:title> }
+          </svg:circle>
+          @if (showLabels()) { <svg:text [attr.x]="point.x" [attr.y]="height()-6" font-size="10" text-anchor="middle" fill="currentColor" class="cm-line-chart__label">{{ point.label }}</svg:text> }
+        }
+      </svg></div>
+    </cm-chart-frame>
+  `,
+})
+export class CmLineChart {
+  readonly data = input.required<readonly CmLinePoint[]>()
+  readonly title = input<string>()
+  readonly description = input<string>()
+  readonly height = input(200)
+  readonly tone = input('primary')
+  readonly color = input<string>()
+  readonly showGrid = input(true)
+  readonly showLabels = input(true)
+  readonly curve = input<'smooth' | 'linear'>('smooth')
+  readonly accessibleTableLabel = input<string>()
+  readonly showAccessibleTable = input(true)
+  readonly tooltipFormat = input<(point: CmLinePoint) => string>()
+  readonly valueFormat = input<(value: number) => string>(value =>
+    value >= 1e6 ? (value/1e6).toFixed(1)+'M' : value >= 1e3 ? (value/1e3).toFixed(0)+'k' : number.format(value))
+  protected readonly ink = computed(() => this.color() ?? cmChartColor(this.tone()))
+  protected readonly series = computed(() => this.data().filter(point => Number.isFinite(point.value)))
+  protected readonly left = computed(() => this.showLabels() ? 50 : 10)
+  protected readonly bottom = computed(() => this.height() - (this.showLabels() ? 30 : 10))
+  private readonly scale = computed(() => {
+    let min = 0, max = -Infinity
+    for (const point of this.series()) { min = Math.min(min, point.value); max = Math.max(max, point.value) }
+    if (!this.series().length) max = 0
+    return { min, max, range: max-min || 1 }
+  })
+  protected readonly grid = computed(() => [0, .25, .5, .75, 1].map(fraction => ({
+    y: 10 + (this.bottom()-10)*fraction, value: this.scale().max-this.scale().range*fraction,
+  })))
+  protected readonly points = computed(() => {
+    const {min, range} = this.scale(), count = this.series().length
+    return this.series().map((point,i) => ({
+      ...point, x: this.left() + (390-this.left())*(count>1 ? i/(count-1) : .5),
+      y: this.bottom() - (point.value-min)*(this.bottom()-10)/range,
+    }))
+  })
+  protected readonly path = computed(() => plotPath(this.points(), this.curve() === 'smooth'))
+  protected readonly area = computed(() => {
+    const points = this.points()
+    return points.length < 2 ? '' : this.path()+' L'+points[points.length-1].x+' '+this.bottom()+' L'+points[0].x+' '+this.bottom()+' Z'
+  })
+  protected readonly table = computed<CmChartTable>(() => ({
+    caption: this.accessibleTableLabel() ?? this.title() ?? 'Dados do gráfico de linhas', headers: ['Ponto','Valor'],
+    rows: this.series().map(point => [point.label,this.valueFormat()(point.value)]),
+  }))
+}
+
 function plotSeries(data: readonly CmComparisonPoint[], key: 'left' | 'right', axis: CmComparisonAxis, smooth: boolean) {
   const bounds = axis.domain?.every(Number.isFinite) && axis.domain[0] < axis.domain[1] ? axis.domain : [0, 0]
   let min = Math.min(0, bounds[0])
