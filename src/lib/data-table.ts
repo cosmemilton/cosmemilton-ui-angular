@@ -1,23 +1,27 @@
-import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, input, linkedSignal, model, output, signal, TemplateRef, viewChild } from '@angular/core'
-import { RouterLink } from '@angular/router'
-import { CmButton } from './button'
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, linkedSignal, model, output, signal, TemplateRef, viewChild } from '@angular/core'
+import { Router, RouterLink } from '@angular/router'
+import { CmButton, type CmButtonVariant, type CmTone } from './button'
 import { CmIcon } from './icon'
-import { CmEmpty } from './page-primitives'
+import { CmEmpty, CmLink } from './page-primitives'
 import { CmAvatar } from './detail-primitives'
 import { CmCheckbox } from './form-primitives'
 import { CmDialog, CmDialogFooter } from './interaction-primitives'
 
-export type CmCellDetail = { label: string; tone?: string; detail?: string; avatar?: string; href?: string; action?: string; actionLabel?: string; sortValue?: string | number }
+export type CmCellDetail = {
+  label: string; tone?: string; detail?: string; avatar?: string; href?: string; dateTime?: string
+  weight?: 'semibold' | 'bold'; action?: string; actionLabel?: string
+  actionVariant?: CmButtonVariant; actionTone?: CmTone; actionPresentation?: 'tableAction'; sortValue?: string | number
+}
 export type CmCellValue = string | number | boolean | CmCellDetail
 export type CmTableRow = { id: string | number; cells: Record<string, CmCellValue> }
-export type CmColumn = { id: string; label: string; align?: 'left' | 'center' | 'right'; sortable?: boolean; hideable?: boolean }
+export type CmColumn = { id: string; label: string; align?: 'left' | 'center' | 'right'; sortable?: boolean; hideable?: boolean; defaultHidden?: boolean }
 export type CmRowAction = { id: string; label: string; icon?: string }
 const defaultSizes = [5, 10, 20, 50]
 const compare = new Intl.Collator('pt-BR', { numeric: true })
 
 @Component({
   selector: 'cm-data-table',
-  imports: [CmAvatar, CmButton, CmCheckbox, CmDialog, CmDialogFooter, CmEmpty, CmIcon, RouterLink],
+  imports: [CmAvatar, CmButton, CmCheckbox, CmDialog, CmDialogFooter, CmEmpty, CmIcon, CmLink, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { style: 'display:block;min-width:0' },
   template: `
@@ -70,9 +74,15 @@ const compare = new Intl.Collator('pt-BR', { numeric: true })
                   <td class="cm-data-table__cell" [class]="column.align ? 'cm-data-table__cell--' + column.align : ''">
                     @if (detail(row.cells[column.id]); as cell) {
                       @if (cell.action) {
-                        <button cmButton type="button" variant="outline" size="sm" [attr.aria-label]="cell.actionLabel ?? cell.label" (click)="rowAction.emit({action:cell.action,row})">{{ cell.label }}</button>
+                        <button cmButton type="button" [variant]="cell.actionVariant ?? 'outline'" [tone]="cell.actionTone ?? 'default'" size="sm"
+                          [class.cm-button--table-action]="cell.actionPresentation === 'tableAction'"
+                          [attr.aria-label]="cell.actionLabel ?? cell.label" (click)="rowAction.emit({action:cell.action,row})">{{ cell.label }}</button>
                       } @else if (cell.href) {
-                        <a class="cm-link cm-link--tone-primary" [routerLink]="cell.href">{{ cell.label }}</a>
+                        @if (router; as linkRouter) {
+                          <a cmLink tone="primary" [routerLink]="linkRouter.parseUrl(cell.href)" [attr.aria-label]="cell.actionLabel">{{ cell.label }}</a>
+                        } @else {
+                          <a cmLink tone="primary" [href]="cell.href" [attr.aria-label]="cell.actionLabel">{{ cell.label }}</a>
+                        }
                       } @else if (cell.tone) {
                         <span [class]="'cm-badge cm-badge--soft cm-badge--' + cell.tone">{{ cell.label }}</span>
                       } @else if (cell.avatar && !cell.detail) {
@@ -80,13 +90,17 @@ const compare = new Intl.Collator('pt-BR', { numeric: true })
                           <cm-avatar size="xs" [fallback]="cell.avatar" aria-hidden="true" />{{ cell.label }}
                         </div>
                       } @else if (cell.detail) {
-                        <div class="cm-row" data-align="center" style="--cm-layout-gap:.5rem">
-                          @if (cell.avatar) { <span class="aurora-avatar">{{ cell.avatar }}</span> }
-                          <div class="cm-stack" style="--cm-layout-gap:.15rem">
-                            <strong class="cm-text cm-text--sm cm-text--semibold">{{ cell.label }}</strong>
-                            @if (cell.detail) { <small class="cm-text cm-text--xs cm-text--muted">{{ cell.detail }}</small> }
+                        <div class="cm-row" data-align="center" style="--cm-layout-gap:var(--space-sm)">
+                          @if (cell.avatar) { <cm-avatar size="sm" [fallback]="cell.avatar" aria-hidden="true" /> }
+                          <div class="cm-stack" style="--cm-layout-gap:var(--space-xs);min-width:0">
+                            <span [class]="'cm-text cm-text--sm cm-text--wrap-anywhere cm-text--' + (cell.weight ?? 'semibold')">{{ cell.label }}</span>
+                            <span class="cm-text cm-text--sm cm-text--muted cm-text--wrap-anywhere">{{ cell.detail }}</span>
                           </div>
                         </div>
+                      } @else if (cell.dateTime) {
+                        <time class="cm-text cm-text--sm" [attr.datetime]="cell.dateTime">{{ cell.label }}</time>
+                      } @else if (cell.weight) {
+                        <span [class]="'cm-text cm-text--sm cm-text--' + cell.weight">{{ cell.label }}</span>
                       } @else { {{ cell.label }} }
                     } @else { {{ text(row.cells[column.id]) }} }
                   </td>
@@ -187,6 +201,7 @@ export class CmDataTable {
   readonly emptyAction = output<void>()
   readonly actions = input<readonly CmRowAction[]>([])
   readonly rowAction = output<{ action: string; row: CmTableRow }>()
+  protected readonly router = inject(Router, { optional: true })
   private readonly scrollArea = viewChild<ElementRef<HTMLDivElement>>('scrollArea')
   protected readonly hasOverflow = signal(false)
   protected readonly showEmpty = computed(() => !!this.emptyTitle() && this.rows().length === 0)
@@ -194,7 +209,9 @@ export class CmDataTable {
   protected readonly sortKey = linkedSignal(this.defaultSortKey)
   protected readonly descending = linkedSignal(() => this.defaultSortDirection() === 'desc')
   protected readonly columnsOpen = signal(false)
-  protected readonly hidden = signal<string[]>([])
+  private readonly defaultHidden = computed(() => this.columns().filter(column => column.hideable !== false && column.defaultHidden).map(column => column.id))
+  private readonly hiddenOverride = signal<string[] | null>(null)
+  protected readonly hidden = computed(() => this.hiddenOverride() ?? this.defaultHidden())
   protected readonly visibleColumns = computed(() => this.columns().filter(column => column.hideable === false || !this.hidden().includes(column.id)))
   protected readonly hiddenCount = computed(() => this.columns().length - this.visibleColumns().length)
   protected readonly effectiveSize = computed(() => this.size() ?? this.pageSize())
@@ -217,13 +234,13 @@ export class CmDataTable {
   constructor() {
     effect(onCleanup => {
       const id = this.tableKey()
-      if (!id || typeof window === 'undefined') { this.hidden.set([]); return }
+      if (!id || typeof window === 'undefined') { this.hiddenOverride.set(null); return }
       const key = 'cm-table:' + id
       const read = () => {
         try {
-          const stored: unknown = JSON.parse(window.localStorage.getItem(key) ?? '[]')
-          this.hidden.set(Array.isArray(stored) ? stored.filter(value => typeof value === 'string') : [])
-        } catch { this.hidden.set([]) }
+          const stored: unknown = JSON.parse(window.localStorage.getItem(key) ?? 'null')
+          this.hiddenOverride.set(Array.isArray(stored) ? stored.filter(value => typeof value === 'string') : null)
+        } catch { this.hiddenOverride.set(null) }
       }
       const onStorage = (event: StorageEvent) => { if (!event.key || event.key === key) read() }
       const onLocal = (event: Event) => { if ((event as CustomEvent).detail?.storageKey === key) read() }
@@ -255,15 +272,17 @@ export class CmDataTable {
     this.saveHidden(hidden)
   }
   protected resetColumns() {
-    this.saveHidden([])
+    this.saveHidden(this.defaultHidden())
     this.columnsOpen.set(false)
   }
   private saveHidden(hidden: string[]) {
-    this.hidden.set(hidden)
+    const defaults = this.defaultHidden()
+    const isDefault = hidden.length === defaults.length && defaults.every(column => hidden.includes(column))
+    this.hiddenOverride.set(isDefault ? null : hidden)
     const key = 'cm-table:' + this.tableKey()
     try {
-      if (hidden.length) window.localStorage.setItem(key, JSON.stringify(hidden))
-      else window.localStorage.removeItem(key)
+      if (isDefault) window.localStorage.removeItem(key)
+      else window.localStorage.setItem(key, JSON.stringify(hidden))
       window.dispatchEvent(new CustomEvent('cm-table-preference', { detail: { storageKey: key } }))
     } catch { /* The selections still apply to this table when storage is unavailable. */ }
   }

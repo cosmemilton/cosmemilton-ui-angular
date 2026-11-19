@@ -69,19 +69,19 @@ abstract class BooleanField extends ValueField<boolean> {
 
 @Component({
   selector: 'cm-native-input',
+  imports: [CmField],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => CmNativeInput), multi: true }],
   host: { style: 'display:block;min-inline-size:0' },
   template: `
-    <label class="cm-angular-field" [attr.for]="controlId()">
-      {{ label() }}
+    <div cmField control="native" [label]="label()" [htmlFor]="controlId()" [required]="required()"
+      [description]="hint()" [descriptionId]="describedBy() ?? undefined">
       <input #control [id]="controlId()" [name]="name()" [type]="type()" [value]="current()" [placeholder]="placeholder()"
         [attr.min]="min() ?? null" [attr.max]="max() ?? null" [attr.step]="step() ?? null" [attr.maxlength]="maxlength() ?? null"
         [attr.autocomplete]="autocomplete() || null" [attr.aria-describedby]="describedBy()" [attr.aria-invalid]="invalid() || null"
         [required]="required()" [disabled]="disabledState()" [readOnly]="readonly()"
         (input)="publish(control.value)" (blur)="touched()" />
-      @if (hint()) { <small class="cm-text cm-text--xs cm-text--muted" [attr.id]="describedBy()">{{ hint() }}</small> }
-    </label>
+    </div>
   `,
 })
 export class CmNativeInput extends StringField {
