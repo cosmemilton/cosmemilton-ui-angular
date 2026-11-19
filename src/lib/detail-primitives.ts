@@ -1,5 +1,6 @@
 import { Component, Directive, computed, input, output, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { CmIcon } from './icon';
 
 export interface CmSummaryItem {
   id?: string | number;
@@ -45,23 +46,34 @@ export interface CmTimelineItem {
   tone?: string;
   href?: string;
   trailing?: string;
+  icon?: string;
+  iconSize?: number;
+  dateTime?: string;
 }
 
 @Component({
   selector: 'cm-timeline',
+  imports: [CmIcon],
   standalone: true,
   host: { style: 'display: contents' },
   template: `
     <ol [class]="'cm-timeline cm-timeline--variant-' + variant()" [style.--cm-timeline-label-width]="width()">
       @for (item of items(); track item.id ?? $index) {
         <li class="cm-timeline__item">
-          @if (hasLabels()) { <div class="cm-timeline__label">{{ item.label }}</div> }
+          @if (hasLabels()) {
+            <div class="cm-timeline__label">
+              @if (item.dateTime) { <time class="cm-text cm-text--xs" [attr.datetime]="item.dateTime">{{ item.label }}</time> }
+              @else { {{ item.label }} }
+            </div>
+          }
           <div class="cm-timeline__rail" aria-hidden="true">
             @if (items().length > 1) {
               <span class="cm-timeline__connector" [class.cm-timeline__connector--first]="$first"
                 [class.cm-timeline__connector--last]="$last"></span>
             }
-            <span [class]="'cm-timeline__marker cm-timeline__marker--tone-' + (item.tone ?? tone())"></span>
+            <span [class]="'cm-timeline__marker cm-timeline__marker--tone-' + (item.tone ?? tone())" [class.cm-timeline__marker--icon]="!!item.icon">
+              @if (item.icon) { <cm-icon [name]="item.icon" [size]="item.iconSize ?? 14" /> }
+            </span>
           </div>
           <div class="cm-timeline__content">
             <div class="cm-timeline__main">

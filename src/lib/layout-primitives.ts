@@ -18,7 +18,7 @@ function classes(...values: Array<string | false | undefined>) {
 }
 
 @Directive({
-  host: { '[class]': 'rootClass()', '[attr.data-align]': 'align()', '[attr.data-justify]': 'justify()', '[style]': 'layoutStyles()' },
+  host: { '[class]': 'rootClass()', '[attr.align]': 'null', '[attr.data-align]': 'align()', '[attr.data-justify]': 'justify()', '[style]': 'layoutStyles()' },
 })
 abstract class LayoutPrimitive {
   protected abstract readonly kind: 'row' | 'stack' | 'col' | 'box';
