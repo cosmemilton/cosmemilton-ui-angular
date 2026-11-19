@@ -1,4 +1,5 @@
 export * from './lib/form-primitives'
+export * from './lib/signature-pad'
 export * from './lib/interaction-primitives'
 export * from './lib/auth-layout'
 export * from './lib/auth-field'
