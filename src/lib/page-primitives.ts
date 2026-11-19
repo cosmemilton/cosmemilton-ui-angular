@@ -127,7 +127,7 @@ export class CmPageHeader {
   host: { '[class]': 'rootClass()' },
   template: `
     @if (icon(); as artwork) {
-      <div class="cm-row" style="--cm-layout-gap:var(--space-sm);min-width:0">
+      <div class="cm-row" data-align="center" style="--cm-layout-gap:var(--space-sm);min-width:0">
         <span cmIconBadge tone="primary" aria-hidden="true"><ng-container [ngTemplateOutlet]="artwork" /></span>
         <ng-container [ngTemplateOutlet]="heading" />
       </div>
